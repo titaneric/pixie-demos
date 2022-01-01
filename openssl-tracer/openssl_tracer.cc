@@ -58,7 +58,7 @@ UProbeSpec kSSLWriteExRetProbeSpec{
     .probe_fn = "probe_ret_SSL_write_ex",
 };
 
-// A probe on entry of SSL_read
+// // A probe on entry of SSL_read
 UProbeSpec kSSLReadEntryProbeSpec{
     .obj_path = ssl_path,
     .symbol = "SSL_read",
@@ -91,12 +91,12 @@ UProbeSpec kSSLReadExRetProbeSpec{
 };
 
 const std::vector<UProbeSpec> kUProbes = {
-    kSSLWriteEntryProbeSpec,
-    kSSLWriteRetProbeSpec,
-    // kSSLWriteExEntryProbeSpec,
-    // kSSLWriteExRetProbeSpec,
-    kSSLReadEntryProbeSpec,
-    kSSLReadRetProbeSpec,
+    // kSSLWriteEntryProbeSpec,
+    // kSSLWriteRetProbeSpec,
+    kSSLWriteExEntryProbeSpec,
+    kSSLWriteExRetProbeSpec,
+    // kSSLReadEntryProbeSpec,
+    // kSSLReadRetProbeSpec,
     kSSLReadExEntryProbeSpec,
     kSSLReadExRetProbeSpec,
 };
