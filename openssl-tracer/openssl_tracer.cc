@@ -26,9 +26,10 @@
 #include "openssl_tracer_types.h"
 #include "probe_deployment.h"
 
+const std::string ssl_path = "/usr/lib64/libssl.so";
 // A probe on entry of SSL_write
 UProbeSpec kSSLWriteEntryProbeSpec{
-    .obj_path = "/usr/lib/x86_64-linux-gnu/libssl.so.1.1",
+    .obj_path = ssl_path,
     .symbol = "SSL_write",
     .attach_type = BPF_PROBE_ENTRY,
     .probe_fn = "probe_entry_SSL_write",
@@ -36,15 +37,30 @@ UProbeSpec kSSLWriteEntryProbeSpec{
 
 // A probe on return of SSL_write
 UProbeSpec kSSLWriteRetProbeSpec{
-    .obj_path = "/usr/lib/x86_64-linux-gnu/libssl.so.1.1",
+    .obj_path = ssl_path,
     .symbol = "SSL_write",
     .attach_type = BPF_PROBE_RETURN,
     .probe_fn = "probe_ret_SSL_write",
 };
 
+UProbeSpec kSSLWriteExEntryProbeSpec{
+    .obj_path = ssl_path,
+    .symbol = "SSL_write_ex",
+    .attach_type = BPF_PROBE_ENTRY,
+    .probe_fn = "probe_entry_SSL_write_ex",
+};
+
+// A probe on return of SSL_write
+UProbeSpec kSSLWriteExRetProbeSpec{
+    .obj_path = ssl_path,
+    .symbol = "SSL_write_ex",
+    .attach_type = BPF_PROBE_RETURN,
+    .probe_fn = "probe_ret_SSL_write_ex",
+};
+
 // A probe on entry of SSL_read
 UProbeSpec kSSLReadEntryProbeSpec{
-    .obj_path = "/usr/lib/x86_64-linux-gnu/libssl.so.1.1",
+    .obj_path = ssl_path,
     .symbol = "SSL_read",
     .attach_type = BPF_PROBE_ENTRY,
     .probe_fn = "probe_entry_SSL_read",
@@ -52,17 +68,37 @@ UProbeSpec kSSLReadEntryProbeSpec{
 
 // A probe on return of SSL_read
 UProbeSpec kSSLReadRetProbeSpec{
-    .obj_path = "/usr/lib/x86_64-linux-gnu/libssl.so.1.1",
+    .obj_path = ssl_path,
     .symbol = "SSL_read",
     .attach_type = BPF_PROBE_RETURN,
     .probe_fn = "probe_ret_SSL_read",
 };
 
+// A probe on entry of SSL_read
+UProbeSpec kSSLReadExEntryProbeSpec{
+    .obj_path = ssl_path,
+    .symbol = "SSL_read_ex",
+    .attach_type = BPF_PROBE_ENTRY,
+    .probe_fn = "probe_entry_SSL_read_ex",
+};
+
+// A probe on return of SSL_read
+UProbeSpec kSSLReadExRetProbeSpec{
+    .obj_path = ssl_path,
+    .symbol = "SSL_read_ex",
+    .attach_type = BPF_PROBE_RETURN,
+    .probe_fn = "probe_ret_SSL_read_ex",
+};
+
 const std::vector<UProbeSpec> kUProbes = {
     kSSLWriteEntryProbeSpec,
     kSSLWriteRetProbeSpec,
+    // kSSLWriteExEntryProbeSpec,
+    // kSSLWriteExRetProbeSpec,
     kSSLReadEntryProbeSpec,
     kSSLReadRetProbeSpec,
+    kSSLReadExEntryProbeSpec,
+    kSSLReadExRetProbeSpec,
 };
 
 void handle_output(void* /*cb_cookie*/, void* data, int /*data_size*/) {
