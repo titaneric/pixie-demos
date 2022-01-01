@@ -91,12 +91,12 @@ UProbeSpec kSSLReadExRetProbeSpec{
 };
 
 const std::vector<UProbeSpec> kUProbes = {
-    // kSSLWriteEntryProbeSpec,
-    // kSSLWriteRetProbeSpec,
+    kSSLWriteEntryProbeSpec,
+    kSSLWriteRetProbeSpec,
     kSSLWriteExEntryProbeSpec,
     kSSLWriteExRetProbeSpec,
-    // kSSLReadEntryProbeSpec,
-    // kSSLReadRetProbeSpec,
+    kSSLReadEntryProbeSpec,
+    kSSLReadRetProbeSpec,
     kSSLReadExEntryProbeSpec,
     kSSLReadExRetProbeSpec,
 };
@@ -108,9 +108,33 @@ void handle_output(void* /*cb_cookie*/, void* data, int /*data_size*/) {
   std::memcpy(&r, data, sizeof(r));
 
   std::string_view plaintext(r.data, r.data_len);
+  std::string type_str;
+  switch (r.type)
+  {
+  case kSSLRead:
+    /* code */
+    type_str = "read";
+    break;
+  case kSSLReadEx:
+    /* code */
+    type_str = "readEx";
+    break;
+  
+  case kSSLWrite:
+    /* code */
+    type_str = "write";
+    break;
+  case kSSLWriteEx:
+    /* code */
+    type_str = "writeEx";
+    break;
+    
+  default:
+    break;
+  }
 
   std::cout << " t=" << r.timestamp_ns;
-  std::cout << " type=" << (r.type == kSSLRead ? "read" : "write");
+  std::cout << " type=" << type_str;
   std::cout << " data=" << plaintext;
   std::cout << std::endl;
 }

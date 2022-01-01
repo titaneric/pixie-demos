@@ -20,7 +20,7 @@
 
 #define MAX_DATA_SIZE 4096
 
-enum ssl_data_event_type { kSSLRead, kSSLWrite };
+enum ssl_data_event_type { kSSLRead, kSSLWrite, kSSLReadEx, kSSLWriteEx };
 
 struct ssl_data_event_t {
   enum ssl_data_event_type type;

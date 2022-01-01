@@ -117,7 +117,8 @@ static int process_SSL_ex_data(struct pt_regs *ctx, uint64_t id, enum ssl_data_e
   {
     return 0;
   }
-  int length = (int)*(_buf->len);
+  int length;
+  bpf_probe_read(&length, sizeof(length), _buf->len);
 
   event->type = type;
   // This is a max function, but it is written in such a way to keep older BPF verifiers happy.
@@ -134,79 +135,81 @@ static int process_SSL_ex_data(struct pt_regs *ctx, uint64_t id, enum ssl_data_e
 
 // Function signature being probed:
 // int SSL_write(SSL *ssl, const void *buf, int num);
-// int probe_entry_SSL_write(struct pt_regs* ctx) {
-//   uint64_t current_pid_tgid = bpf_get_current_pid_tgid();
-//   uint32_t pid = current_pid_tgid >> 32;
+int probe_entry_SSL_write(struct pt_regs* ctx) {
+  uint64_t current_pid_tgid = bpf_get_current_pid_tgid();
+  uint32_t pid = current_pid_tgid >> 32;
 
-//   if (pid != TRACE_PID) {
-//     return 0;
-//   }
+  if (pid != TRACE_PID) {
+    return 0;
+  }
 
-//   const char* buf = (const char*)PT_REGS_PARM2(ctx);
-//   struct buffer* _buf = create_ssl_args_buffer(buf, NULL);
-//   active_ssl_write_args_map.update(&current_pid_tgid, _buf);
+  const char* buf = (const char*)PT_REGS_PARM2(ctx);
+  struct buffer* _buf = create_ssl_args_buffer(buf, NULL);
+  if (_buf == NULL)
+    return 0;
+  active_ssl_write_args_map.update(&current_pid_tgid, _buf);
 
-//   return 0;
-// }
+  return 0;
+}
 
-// int probe_ret_SSL_write(struct pt_regs* ctx) {
-//   uint64_t current_pid_tgid = bpf_get_current_pid_tgid();
-//   uint32_t pid = current_pid_tgid >> 32;
+int probe_ret_SSL_write(struct pt_regs* ctx) {
+  uint64_t current_pid_tgid = bpf_get_current_pid_tgid();
+  uint32_t pid = current_pid_tgid >> 32;
 
-//   if (pid != TRACE_PID) {
-//     return 0;
-//   }
+  if (pid != TRACE_PID) {
+    return 0;
+  }
 
-//   struct buffer* _buf = active_ssl_write_args_map.lookup(&current_pid_tgid);
-//   if (_buf != NULL) {
-//     process_SSL_data(ctx, current_pid_tgid, kSSLWrite, _buf->content);
-//   }
+  struct buffer* _buf = active_ssl_write_args_map.lookup(&current_pid_tgid);
+  if (_buf != NULL) {
+    process_SSL_data(ctx, current_pid_tgid, kSSLWrite, _buf->content);
+  }
 
-//   active_ssl_write_args_map.delete(&current_pid_tgid);
-//   return 0;
-// }
+  active_ssl_write_args_map.delete(&current_pid_tgid);
+  return 0;
+}
 
 // Function signature being probed:
 // int SSL_read(SSL *s, void *buf, int num)
-// int probe_entry_SSL_read(struct pt_regs *ctx)
-// {
-//   uint64_t current_pid_tgid = bpf_get_current_pid_tgid();
-//   uint32_t pid = current_pid_tgid >> 32;
+int probe_entry_SSL_read(struct pt_regs *ctx)
+{
+  uint64_t current_pid_tgid = bpf_get_current_pid_tgid();
+  uint32_t pid = current_pid_tgid >> 32;
 
-//   if (pid != TRACE_PID)
-//   {
-//     return 0;
-//   }
+  if (pid != TRACE_PID)
+  {
+    return 0;
+  }
 
-//   const char *buf = (const char *)PT_REGS_PARM2(ctx);
-//   struct buffer *_buf = create_ssl_args_buffer(buf, NULL);
-//   if (_buf != NULL)
-//   {
-//     active_ssl_read_args_map.update(&current_pid_tgid, _buf);
-//   }
+  const char *buf = (const char *)PT_REGS_PARM2(ctx);
+  struct buffer *_buf = create_ssl_args_buffer(buf, NULL);
+  if (_buf != NULL)
+  {
+    active_ssl_read_args_map.update(&current_pid_tgid, _buf);
+  }
 
-//   return 0;
-// }
+  return 0;
+}
 
-// int probe_ret_SSL_read(struct pt_regs *ctx)
-// {
-//   uint64_t current_pid_tgid = bpf_get_current_pid_tgid();
-//   uint32_t pid = current_pid_tgid >> 32;
+int probe_ret_SSL_read(struct pt_regs *ctx)
+{
+  uint64_t current_pid_tgid = bpf_get_current_pid_tgid();
+  uint32_t pid = current_pid_tgid >> 32;
 
-//   if (pid != TRACE_PID)
-//   {
-//     return 0;
-//   }
+  if (pid != TRACE_PID)
+  {
+    return 0;
+  }
 
-//   struct buffer *_buf = active_ssl_read_args_map.lookup(&current_pid_tgid);
-//   if (_buf != NULL)
-//   {
-//     process_SSL_data(ctx, current_pid_tgid, kSSLRead, _buf->content);
-//   }
+  struct buffer *_buf = active_ssl_read_args_map.lookup(&current_pid_tgid);
+  if (_buf != NULL)
+  {
+    process_SSL_data(ctx, current_pid_tgid, kSSLRead, _buf->content);
+  }
 
-//   active_ssl_read_args_map.delete(&current_pid_tgid);
-//   return 0;
-// }
+  active_ssl_read_args_map.delete(&current_pid_tgid);
+  return 0;
+}
 int probe_entry_SSL_write_ex(struct pt_regs* ctx) {
   uint64_t current_pid_tgid = bpf_get_current_pid_tgid();
   uint32_t pid = current_pid_tgid >> 32;
@@ -235,7 +238,7 @@ int probe_ret_SSL_write_ex(struct pt_regs* ctx) {
 
   struct buffer *_buf = active_ssl_write_args_map.lookup(&current_pid_tgid);
   if (_buf != NULL) {
-    process_SSL_ex_data(ctx, current_pid_tgid, kSSLWrite, _buf);
+    process_SSL_ex_data(ctx, current_pid_tgid, kSSLWriteEx, _buf);
   }
 
   active_ssl_write_args_map.delete(&current_pid_tgid);
@@ -277,7 +280,7 @@ int probe_ret_SSL_read_ex(struct pt_regs *ctx)
   struct buffer *_buf = active_ssl_read_args_map.lookup(&current_pid_tgid);
   if (_buf != NULL)
   {
-    process_SSL_ex_data(ctx, current_pid_tgid, kSSLRead, _buf);
+    process_SSL_ex_data(ctx, current_pid_tgid, kSSLReadEx, _buf);
   }
 
   active_ssl_read_args_map.delete(&current_pid_tgid);
